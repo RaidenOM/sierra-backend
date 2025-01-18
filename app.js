@@ -60,6 +60,20 @@ function verifyToken(req, res, next) {
   });
 }
 
+app.get("/profile", verifyToken, async (req, res) => {
+  const { username } = req.user;
+  const user = await User.findOne({ username: username });
+  res.json({
+    username: user.username,
+    profilePhoto: user.profilePhoto,
+    bio: user.bio,
+  });
+});
+
 function createToken(username) {
   return jwt.sign({ username: username }, process.env.JWT_SECRET_KEY);
 }
+
+app.listen(3000, (req, res) => {
+  console.log("Server running on PORT: 3000");
+});
