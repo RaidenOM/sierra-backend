@@ -6,8 +6,20 @@ const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
 const User = require("./models/User");
 const Message = require("./models/Message");
+const http = require("http");
+const { Server } = require("socket.io");
 
 const app = express();
+const server = http.createServer(app);
+const io = new Server(server, {
+  cors: {
+    origin: "*",
+    methods: ["GET", "POST"],
+    allowedHeaders: ["*"],
+    credentials: false,
+  },
+});
+
 mongoose.connect("mongodb://127.0.0.1:27017/sierra");
 
 app.use(express.json());
@@ -121,13 +133,6 @@ app.get("/messages/:userId1/:userId2", async (req, res) => {
       ],
     }).sort({ sentAt: 1 }); // Sort messages by sentAt in ascending order
 
-    // If no messages are found
-    if (messages.length === 0) {
-      return res
-        .status(404)
-        .json({ message: "No messages found between these users." });
-    }
-
     // Return the messages as a response
     res.json(messages);
   } catch (error) {
@@ -155,6 +160,38 @@ function createToken(userId) {
   return jwt.sign({ id: userId }, process.env.JWT_SECRET_KEY);
 }
 
-app.listen(3000, (req, res) => {
+// Real time chat setup
+io.on("connection", (socket) => {
+  console.log("A user connected:", socket.id);
+
+  // Create room for every user using their id
+  socket.on("join-room", (userId) => {
+    socket.join(userId);
+    console.log(`User ${userId} joined a room ${userId}`);
+  });
+
+  // listen for messages
+  socket.on("send-message", async (data) => {
+    const { senderId, receiverId, message } = data;
+    const savedMessage = await new Message({
+      senderId: senderId,
+      receiverId: receiverId,
+      message: message,
+      sentAt: new Date().toISOString(),
+    }).save();
+
+    // notify just the receiver
+    io.to(receiverId).emit("new-message", savedMessage);
+
+    // Notify the sender (optional confirmation)
+    io.to(senderId).emit("message-sent", savedMessage);
+
+    socket.on("disconnect", () => {
+      console.log("A user disconnected:", socket.id);
+    });
+  });
+});
+
+server.listen(3000, (req, res) => {
   console.log("Server running on PORT: 3000");
 });
