@@ -20,7 +20,16 @@ const io = new Server(server, {
   },
 });
 
-mongoose.connect(process.env.DB_URL);
+const dbUrl = process.env.DB_URL || "mongodb://localhost:27017/sierra";
+
+mongoose
+  .connect(dbUrl)
+  .then(() => {
+    console.log("Connected to database");
+  })
+  .catch((err) => {
+    console.log("Error connecting to database");
+  });
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
