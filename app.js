@@ -20,7 +20,7 @@ const io = new Server(server, {
   },
 });
 
-mongoose.connect("mongodb://127.0.0.1:27017/sierra");
+mongoose.connect(process.env.DB_URL);
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -192,6 +192,7 @@ io.on("connection", (socket) => {
   });
 });
 
-server.listen(3000, (req, res) => {
-  console.log("Server running on PORT: 3000");
+const port = process.env.PORT || 3000;
+server.listen(port, () => {
+  console.log(`Server is running on port ${port}`);
 });
