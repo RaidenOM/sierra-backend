@@ -243,6 +243,26 @@ app.get("/mark-read/:user1/:user2", async (req, res) => {
   }
 });
 
+app.get("/delete-chats/:user1ID/:user2ID", async (req, res) => {
+  const { user1ID, user2ID } = req.params;
+
+  const id1 = new mongoose.Types.ObjectId(user1ID);
+  const id2 = new mongoose.Types.ObjectId(user2ID);
+
+  try {
+    const deletedMessages = await Message.deleteMany({
+      $or: [
+        { senderId: id1, receiverId: id2 },
+        { senderId: id2, receiverId: id1 },
+      ],
+    });
+
+    res.json(deletedMessages);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // Real time chat setup
 io.on("connection", (socket) => {
   console.log("A user connected:", socket.id);
