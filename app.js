@@ -272,7 +272,7 @@ io.on("connection", (socket) => {
         .populate("receiverId", "name email") // Populate specific fields for receiver
         .exec();
 
-      // Notify the receiver with the new message
+      // Notify the receiver with the new message s
       io.to(receiverId).emit("new-message", populatedMessage);
 
       // Notify the sender (optional confirmation)
