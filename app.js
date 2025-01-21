@@ -211,15 +211,36 @@ app.get("/latest-messages", verifyToken, async (req, res) => {
   }
 });
 
-app.get("/mark-read/:id", async (req, res) => {
-  const { id } = req.params;
-  const updatedMessage = await Message.findByIdAndUpdate(
-    id,
-    { isRead: true },
-    { new: true }
-  );
-  console.log(updatedMessage);
-  res.json(updatedMessage);
+const mongoose = require("mongoose");
+
+app.get("/mark-read/:user1/:user2", async (req, res) => {
+  const { user1, user2 } = req.params;
+
+  // Convert the user1 and user2 to Mongoose ObjectId
+  const user1Id = mongoose.Types.ObjectId(user1);
+  const user2Id = mongoose.Types.ObjectId(user2);
+
+  try {
+    // Find and update all messages between user1 and user2 where the message is unread
+    const result = await Message.updateMany(
+      {
+        $or: [
+          { senderId: user1Id, receiverId: user2Id },
+          { senderId: user2Id, receiverId: user1Id },
+        ],
+        isRead: false, // Only mark unread messages as read
+      },
+      { $set: { isRead: true } } // Set the 'isRead' field to true
+    );
+
+    // Check if any messages were updated
+    if (result.nModified > 0) {
+      res.status(200).json({ message: "Messages marked as read successfully" });
+    }
+  } catch (err) {
+    console.error("Error marking messages as read:", err);
+    res.status(500).json({ message: "Failed to mark messages as read" });
+  }
 });
 
 // Real time chat setup
