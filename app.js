@@ -169,49 +169,44 @@ function createToken(userId) {
   return jwt.sign({ id: userId }, process.env.JWT_SECRET_KEY);
 }
 
+const mongoose = require("mongoose");
+
 app.get("/latest-messages", verifyToken, async (req, res) => {
-  const { id: userId } = req.user; // Get the user ID from the token
+  const { id: userId } = req.user;
 
   try {
-    const relatedMessages = await Message.aggregate([
-      {
-        // Step 1: Match messages where the user is either sender or receiver
-        $match: {
-          $or: [{ senderId: userId }, { receiverId: userId }],
-        },
-      },
-      {
-        // Step 2: Sort messages by sentAt (descending) to get the latest ones first
-        $sort: { sentAt: -1 },
-      },
-      {
-        // Step 3: Group by the other user's ID (senderId or receiverId)
-        $group: {
-          _id: {
-            // If the sender is the user, group by receiverId, else by senderId
-            $cond: [
-              { $eq: ["$senderId", userId] },
-              "$receiverId", // If the user is the sender, group by receiver
-              "$senderId", // Otherwise, group by sender
-            ],
-          },
-          latestMessage: { $first: "$$ROOT" }, // Pick the latest message (first after sorting)
-        },
-      },
-      {
-        // Optional: Project the latest message data
-        $project: {
-          _id: 0, // Remove _id
-          contactId: "$_id", // Rename _id to contactId
-          message: "$latestMessage.message", // Include the message text
-          sentAt: "$latestMessage.sentAt", // Include the sentAt timestamp
-        },
-      },
-    ]);
+    const userObjectId = mongoose.Types.ObjectId(userId);
 
-    // The relatedMessages array will contain the latest message for each contact
-    console.log(relatedMessages); // Log to check the result
-    res.json(relatedMessages); // Return the result to the client
+    // Step 1: Retrieve all messages where the user is involved either as sender or receiver
+    const messages = await Message.find({
+      $or: [{ senderId: userObjectId }, { receiverId: userObjectId }],
+    })
+      .sort({ sentAt: -1 }) // Sort messages by sentAt in descending order (latest first)
+      .exec();
+
+    if (!messages || messages.length === 0) {
+      return res.json([]); // Return an empty array if no messages found
+    }
+
+    // Step 2: Group the latest message per contact (sender/receiver)
+    const latestMessages = [];
+    const contacts = new Set();
+
+    messages.forEach((message) => {
+      const contactId =
+        message.senderId.toString() === userObjectId.toString()
+          ? message.receiverId.toString()
+          : message.senderId.toString();
+
+      // If the contactId is not already in the latestMessages array, add the latest message
+      if (!contacts.has(contactId)) {
+        latestMessages.push(message);
+        contacts.add(contactId); // Add contactId to the set
+      }
+    });
+
+    // Step 3: Send the latest messages response
+    res.json(latestMessages);
   } catch (error) {
     console.error("Error fetching latest messages:", error);
     res.status(500).json({ message: "Error fetching latest messages" });
