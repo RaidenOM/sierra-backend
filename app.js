@@ -273,10 +273,10 @@ io.on("connection", (socket) => {
         .exec();
 
       // Notify the receiver with the new message s
-      io.to(receiverId).emit("new-message", populatedMessage);
+      io.to(receiverId).emit("new-message", savedMessage);
 
       // Notify the sender (optional confirmation)
-      io.to(senderId).emit("message-sent", populatedMessage);
+      io.to(senderId).emit("message-sent", savedMessage);
 
       io.to(receiverId).emit("chat-notify", populatedMessage);
 
