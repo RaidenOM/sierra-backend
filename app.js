@@ -169,8 +169,6 @@ function createToken(userId) {
   return jwt.sign({ id: userId }, process.env.JWT_SECRET_KEY);
 }
 
-const mongoose = require("mongoose");
-
 app.get("/latest-messages", verifyToken, async (req, res) => {
   const { id: userId } = req.user;
 
