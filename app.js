@@ -211,14 +211,12 @@ app.get("/latest-messages", verifyToken, async (req, res) => {
   }
 });
 
-const mongoose = require("mongoose");
-
 app.get("/mark-read/:user1/:user2", async (req, res) => {
   const { user1, user2 } = req.params;
 
   // Convert the user1 and user2 to Mongoose ObjectId
-  const user1Id = mongoose.Types.ObjectId(user1);
-  const user2Id = mongoose.Types.ObjectId(user2);
+  const user1Id = new mongoose.Types.ObjectId(user1);
+  const user2Id = new mongoose.Types.ObjectId(user2);
 
   try {
     // Find and update all messages between user1 and user2 where the message is unread
