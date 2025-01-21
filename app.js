@@ -269,6 +269,10 @@ io.on("connection", (socket) => {
     // Notify the sender (optional confirmation)
     io.to(senderId).emit("message-sent", savedMessage);
 
+    // populate and notify about a chat
+    await savedMessage.populate("senderId").populate("receiverId");
+    io.to(senderId).emit("chat-notify", savedMessage);
+
     socket.on("disconnect", () => {
       console.log("A user disconnected:", socket.id);
     });
