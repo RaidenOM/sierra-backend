@@ -247,35 +247,48 @@ app.get("/mark-read/:user1/:user2", async (req, res) => {
 io.on("connection", (socket) => {
   console.log("A user connected:", socket.id);
 
-  // Create room for every user using their id
+  // Create a room for every user using their id
   socket.on("join-room", (userId) => {
     socket.join(userId);
     console.log(`User ${userId} joined a room ${userId}`);
   });
 
-  // listen for messages
+  // Listen for messages
   socket.on("send-message", async (data) => {
-    const { senderId, receiverId, message } = data;
-    const savedMessage = await new Message({
-      senderId: senderId,
-      receiverId: receiverId,
-      message: message,
-      sentAt: new Date().toISOString(),
-    }).save();
+    try {
+      const { senderId, receiverId, message } = data;
 
-    // notify just the receiver
-    io.to(receiverId).emit("new-message", savedMessage);
+      // Save the message to the database
+      const savedMessage = await new Message({
+        senderId: senderId,
+        receiverId: receiverId,
+        message: message,
+        sentAt: new Date().toISOString(),
+      }).save();
 
-    // Notify the sender (optional confirmation)
-    io.to(senderId).emit("message-sent", savedMessage);
+      // Populate senderId and receiverId
+      const populatedMessage = await savedMessage
+        .populate("senderId")
+        .populate("receiverId")
+        .execPopulate();
 
-    // populate and notify about a chat
-    await savedMessage.populate("senderId").populate("receiverId");
-    io.to(senderId).emit("chat-notify", savedMessage);
+      // Notify the receiver with the new message
+      io.to(receiverId).emit("new-message", populatedMessage);
 
-    socket.on("disconnect", () => {
-      console.log("A user disconnected:", socket.id);
-    });
+      // Notify the sender (optional confirmation)
+      io.to(senderId).emit("message-sent", populatedMessage);
+
+      io.to(receiverId).emit("chat-notify", populatedMessage);
+
+      console.log("Message sent and notifications emitted.");
+    } catch (error) {
+      console.error("Error handling send-message event:", error);
+    }
+  });
+
+  // Handle user disconnecting
+  socket.on("disconnect", () => {
+    console.log("A user disconnected:", socket.id);
   });
 });
 
