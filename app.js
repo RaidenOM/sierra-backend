@@ -8,6 +8,7 @@ const User = require("./models/User");
 const Message = require("./models/Message");
 const http = require("http");
 const { Server } = require("socket.io");
+const { messages } = require("../backend");
 
 const app = express();
 const server = http.createServer(app);
@@ -170,33 +171,48 @@ function createToken(userId) {
 }
 
 app.get("/latest-messages", verifyToken, async (req, res) => {
-  const { id: userId } = req.user;
-  console.log(userId);
+  const { id: userId } = req.user; // Get the user ID from the token
 
   try {
-    const latestMessages = await Message.aggregate([
+    const relatedMessages = await Message.aggregate([
       {
+        // Step 1: Match messages where the user is either sender or receiver
         $match: {
           $or: [{ senderId: userId }, { receiverId: userId }],
         },
       },
       {
-        $sort: { sentAt: -1 }, // Sort by most recent first
+        // Step 2: Sort messages by sentAt (descending) to get the latest ones first
+        $sort: { sentAt: -1 },
       },
       {
+        // Step 3: Group by the other user's ID (senderId or receiverId)
         $group: {
           _id: {
-            $cond: [{ $eq: ["$senderId", userId] }, "$receiverId", "$senderId"],
+            // If the sender is the user, group by receiverId, else by senderId
+            $cond: [
+              { $eq: ["$senderId", userId] },
+              "$receiverId", // If the user is the sender, group by receiver
+              "$senderId", // Otherwise, group by sender
+            ],
           },
-          latestMessage: { $first: "$$ROOT" }, // Pick the first (latest) message
+          latestMessage: { $first: "$$ROOT" }, // Pick the latest message (first after sorting)
+        },
+      },
+      {
+        // Optional: Project the latest message data
+        $project: {
+          _id: 0, // Remove _id
+          contactId: "$_id", // Rename _id to contactId
+          message: "$latestMessage.message", // Include the message text
+          sentAt: "$latestMessage.sentAt", // Include the sentAt timestamp
         },
       },
     ]);
 
-    const data = latestMessages.map((group) => group.latestMessage);
-    console.log(data);
-
-    res.json(data);
+    // The relatedMessages array will contain the latest message for each contact
+    console.log(relatedMessages); // Log to check the result
+    res.json(relatedMessages); // Return the result to the client
   } catch (error) {
     console.error("Error fetching latest messages:", error);
     res.status(500).json({ message: "Error fetching latest messages" });
