@@ -179,11 +179,13 @@ app.get("/latest-messages", verifyToken, async (req, res) => {
     const messages = await Message.find({
       $or: [{ senderId: userObjectId }, { receiverId: userObjectId }],
     })
-      .sort({ sentAt: -1 }) // Sort messages by sentAt in descending order (latest first)
+      .sort({ sentAt: -1 })
+      .populate("senderId")
+      .populate("receiverId")
       .exec();
 
     if (!messages || messages.length === 0) {
-      return res.json([]); // Return an empty array if no messages found
+      return res.json([]);
     }
 
     // Step 2: Group the latest message per contact (sender/receiver)
@@ -192,9 +194,9 @@ app.get("/latest-messages", verifyToken, async (req, res) => {
 
     messages.forEach((message) => {
       const contactId =
-        message.senderId.toString() === userObjectId.toString()
-          ? message.receiverId.toString()
-          : message.senderId.toString();
+        message.senderId._id.toString() === userObjectId.toString()
+          ? message.receiverId._id.toString()
+          : message.senderId._id.toString();
 
       // If the contactId is not already in the latestMessages array, add the latest message
       if (!contacts.has(contactId)) {
