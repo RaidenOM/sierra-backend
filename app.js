@@ -192,7 +192,10 @@ app.get("/latest-messages", verifyToken, async (req, res) => {
       },
     ]);
 
-    res.json(latestMessages.map((group) => group.latestMessage));
+    const data = latestMessages.map((group) => group.latestMessage);
+    console.err(data);
+
+    res.json(data);
   } catch (error) {
     console.error("Error fetching latest messages:", error);
     res.status(500).json({ message: "Error fetching latest messages" });
