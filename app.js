@@ -169,6 +169,42 @@ function createToken(userId) {
   return jwt.sign({ id: userId }, process.env.JWT_SECRET_KEY);
 }
 
+app.get("/latest-messages", verifyToken, async (req, res) => {
+  const { id: userId } = req.user;
+
+  try {
+    const latestMessages = await Message.aggregate([
+      {
+        $match: {
+          $or: [{ senderId: userId }, { receiverId: userId }],
+        },
+      },
+      {
+        $sort: { sentAt: -1 }, // Sort by most recent first
+      },
+      {
+        $group: {
+          _id: {
+            $cond: [{ $eq: ["$senderId", userId] }, "$receiverId", "$senderId"],
+          },
+          latestMessage: { $first: "$$ROOT" }, // Pick the first (latest) message
+        },
+      },
+    ]);
+
+    res.json(latestMessages.map((group) => group.latestMessage));
+  } catch (error) {
+    console.error("Error fetching latest messages:", error);
+    res.status(500).json({ message: "Error fetching latest messages" });
+  }
+});
+
+app.get("/mark-read/:id", async (req, res) => {
+  const { id } = req.params;
+  const updatedMessage = await Message.findByIdAndUpdate(id, { isRead: true });
+  res.json(updatedMessage);
+});
+
 // Real time chat setup
 io.on("connection", (socket) => {
   console.log("A user connected:", socket.id);
