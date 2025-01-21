@@ -173,7 +173,7 @@ app.get("/latest-messages", verifyToken, async (req, res) => {
   const { id: userId } = req.user;
 
   try {
-    const userObjectId = mongoose.Types.ObjectId(userId);
+    const userObjectId = new mongoose.Types.ObjectId(userId);
 
     // Step 1: Retrieve all messages where the user is involved either as sender or receiver
     const messages = await Message.find({
