@@ -8,7 +8,6 @@ const User = require("./models/User");
 const Message = require("./models/Message");
 const http = require("http");
 const { Server } = require("socket.io");
-const { messages } = require("../backend");
 
 const app = express();
 const server = http.createServer(app);
