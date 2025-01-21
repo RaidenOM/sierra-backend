@@ -171,6 +171,7 @@ function createToken(userId) {
 
 app.get("/latest-messages", verifyToken, async (req, res) => {
   const { id: userId } = req.user;
+  console.log(userId);
 
   try {
     const latestMessages = await Message.aggregate([
