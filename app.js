@@ -268,8 +268,8 @@ io.on("connection", (socket) => {
 
       // Populate senderId and receiverId
       const populatedMessage = await Message.findById(savedMessage._id)
-        .populate("senderId", "name email") // Populate specific fields for sender
-        .populate("receiverId", "name email") // Populate specific fields for receiver
+        .populate("senderId")
+        .populate("receiverId")
         .exec();
 
       // Notify the receiver with the new message s
