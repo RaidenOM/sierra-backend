@@ -213,7 +213,12 @@ app.get("/latest-messages", verifyToken, async (req, res) => {
 
 app.get("/mark-read/:id", async (req, res) => {
   const { id } = req.params;
-  const updatedMessage = await Message.findByIdAndUpdate(id, { isRead: true });
+  const updatedMessage = await Message.findByIdAndUpdate(
+    id,
+    { isRead: true },
+    { new: true }
+  );
+  console.log(updatedMessage);
   res.json(updatedMessage);
 });
 
