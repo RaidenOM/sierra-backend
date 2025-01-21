@@ -193,7 +193,7 @@ app.get("/latest-messages", verifyToken, async (req, res) => {
     ]);
 
     const data = latestMessages.map((group) => group.latestMessage);
-    console.err(data);
+    console.log(data);
 
     res.json(data);
   } catch (error) {
