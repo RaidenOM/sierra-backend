@@ -267,10 +267,10 @@ io.on("connection", (socket) => {
       }).save();
 
       // Populate senderId and receiverId
-      const populatedMessage = await savedMessage
-        .populate("senderId")
-        .populate("receiverId")
-        .execPopulate();
+      const populatedMessage = await Message.findById(savedMessage._id)
+        .populate("senderId", "name email") // Populate specific fields for sender
+        .populate("receiverId", "name email") // Populate specific fields for receiver
+        .exec();
 
       // Notify the receiver with the new message
       io.to(receiverId).emit("new-message", populatedMessage);
