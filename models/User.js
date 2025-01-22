@@ -5,6 +5,7 @@ const UserSchema = new mongoose.Schema({
     type: String,
     required: true,
     unique: true,
+    trim: true,
   },
   password: {
     type: String,
@@ -18,6 +19,7 @@ const UserSchema = new mongoose.Schema({
   bio: {
     type: String,
     default: "Hey there, I am using Sierra",
+    trim: true,
   },
 });
 
