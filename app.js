@@ -192,7 +192,7 @@ app.get("/latest-messages", verifyToken, async (req, res) => {
     const latestMessages = [];
     const contacts = new Set();
 
-    messages.forEach((message) => {
+    messages.forEach(async (message) => {
       const contactId =
         message.senderId._id.toString() === userObjectId.toString()
           ? message.receiverId._id.toString()
@@ -200,7 +200,12 @@ app.get("/latest-messages", verifyToken, async (req, res) => {
 
       // If the contactId is not already in the latestMessages array, add the latest message
       if (!contacts.has(contactId)) {
-        latestMessages.push(message);
+        const unreadCount = await Message.countDocuments({
+          senderId: contactId,
+          receiverId: userObjectId,
+          isRead: false,
+        });
+        latestMessages.push({ ...message, unreadCount: unreadCount });
         contacts.add(contactId); // Add contactId to the set
       }
     });
