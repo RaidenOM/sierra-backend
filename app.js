@@ -205,7 +205,10 @@ app.get("/latest-messages", verifyToken, async (req, res) => {
           receiverId: userObjectId,
           isRead: false,
         });
-        latestMessages.push({ ...message, unreadCount: unreadCount });
+        latestMessages.push({
+          ...message.toObject(),
+          unreadCount: unreadCount,
+        });
         contacts.add(contactId); // Add contactId to the set
       }
     }
