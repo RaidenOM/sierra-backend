@@ -192,7 +192,7 @@ app.get("/latest-messages", verifyToken, async (req, res) => {
     const latestMessages = [];
     const contacts = new Set();
 
-    messages.forEach(async (message) => {
+    for (const message of messages) {
       const contactId =
         message.senderId._id.toString() === userObjectId.toString()
           ? message.receiverId._id.toString()
@@ -208,7 +208,7 @@ app.get("/latest-messages", verifyToken, async (req, res) => {
         latestMessages.push({ ...message, unreadCount: unreadCount });
         contacts.add(contactId); // Add contactId to the set
       }
-    });
+    }
 
     // Step 3: Send the latest messages response
     res.json(latestMessages);
