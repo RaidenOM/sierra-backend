@@ -298,7 +298,16 @@ io.on("connection", (socket) => {
       // Notify the sender (optional confirmation)
       io.to(senderId).emit("message-sent", savedMessage);
 
-      io.to(receiverId).emit("chat-notify", populatedMessage);
+      const unreadCount = await Message.countDocuments({
+        senderId: senderId,
+        receiverId: receiverId,
+        isRead: false,
+      });
+
+      io.to(receiverId).emit("chat-notify", {
+        ...populatedMessage.toObject(),
+        unreadCount: unreadCount,
+      });
 
       console.log("Message sent and notifications emitted.");
     } catch (error) {
