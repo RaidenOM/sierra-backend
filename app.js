@@ -213,24 +213,16 @@ app.get("/latest-messages", verifyToken, async (req, res) => {
   }
 });
 
-app.get("/mark-read/:user1/:user2", async (req, res) => {
-  const { user1, user2 } = req.params;
+app.get("/mark-read/:senderId/:receiverId", async (req, res) => {
+  const { senderId, receiverId } = req.params;
 
-  // Convert the user1 and user2 to Mongoose ObjectId
-  const user1Id = new mongoose.Types.ObjectId(user1);
-  const user2Id = new mongoose.Types.ObjectId(user2);
+  const senderIdObject = new mongoose.Types.ObjectId(senderId);
+  const receiverIdObject = new mongoose.Types.ObjectId(receiverId);
 
   try {
-    // Find and update all messages between user1 and user2 where the message is unread
     const result = await Message.updateMany(
-      {
-        $or: [
-          { senderId: user1Id, receiverId: user2Id },
-          { senderId: user2Id, receiverId: user1Id },
-        ],
-        isRead: false, // Only mark unread messages as read
-      },
-      { $set: { isRead: true } } // Set the 'isRead' field to true
+      { senderId: senderIdObject, receiverId: receiverIdObject, isRead: false },
+      { $set: { isRead: true } }
     );
 
     // Check if any messages were updated
