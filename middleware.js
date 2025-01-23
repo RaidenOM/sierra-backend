@@ -1,6 +1,7 @@
 const joi = require("joi");
 const ExpressError = require("./utilities/ExpressError");
 require("dotenv").config();
+const jwt = require("jsonwebtoken");
 
 module.exports.validateUser = (req, res, next) => {
   const userSchema = joi.object({
