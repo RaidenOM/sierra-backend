@@ -8,6 +8,9 @@ const User = require("./models/User");
 const Message = require("./models/Message");
 const http = require("http");
 const { Server } = require("socket.io");
+const { verifyToken, validateMessage } = require("./middleware");
+const methodOverride = require("method-override");
+const catchAsync = require("./utilities/catchAsync");
 
 const app = express();
 const server = http.createServer(app);
@@ -33,6 +36,7 @@ mongoose
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(methodOverride("_method"));
 
 app.post("/register", async (req, res) => {
   const { username, password } = req.body;
@@ -62,35 +66,10 @@ app.post("/login", async (req, res) => {
   res.json({ token: token });
 });
 
-function verifyToken(req, res, next) {
-  const authHeader = req.headers.authorization;
-  const token = authHeader && authHeader.split(" ")[1];
-
-  //check if token exists
-  if (!token) {
-    return res.status(401).json({ message: "Authorization token required" });
-  }
-
-  //verify the token
-  jwt.verify(token, process.env.JWT_SECRET_KEY, (err, payload) => {
-    if (err) {
-      return res.status(403).json({ message: "Invalid token" });
-    }
-
-    req.user = payload;
-    next();
-  });
-}
-
 app.get("/profile", verifyToken, async (req, res) => {
   const { id } = req.user;
   const user = await User.findById(id);
   res.json(user);
-});
-
-app.get("/users", async (req, res) => {
-  const users = await User.find({});
-  res.json(users);
 });
 
 // Get user profile by id
@@ -100,7 +79,6 @@ app.get("/users/:id", async (req, res) => {
   try {
     const user = await User.findById(id);
 
-    // If user is not found, return a 404 error
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
@@ -118,7 +96,6 @@ app.get("/search/:username", async (req, res) => {
   try {
     const user = await User.findOne({ username: username });
 
-    // If user is not found, return a 404 error
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
@@ -131,48 +108,54 @@ app.get("/search/:username", async (req, res) => {
 });
 
 // Route to fetch messages between two users
-app.get("/messages/:userId1/:userId2", async (req, res) => {
-  const { userId1, userId2 } = req.params;
+app.get(
+  "/messages/:otherUserId",
+  verifyToken,
+  catchAsync(async (req, res) => {
+    const { otherUserId } = req.params;
+    const { id: currentUserId } = req.user;
 
-  try {
     const messages = await Message.find({
       $or: [
-        { senderId: userId1, receiverId: userId2 },
-        { senderId: userId2, receiverId: userId1 },
+        { senderId: otherUserId, receiverId: currentUserId },
+        { senderId: currentUserId, receiverId: otherUserId },
       ],
-    }).sort({ sentAt: 1 }); // Sort messages by sentAt in ascending order
+    }).sort({ sentAt: 1 });
 
-    // Return the messages as a response
     res.json(messages);
-  } catch (error) {
-    console.error("Error fetching messages:", error);
-    res.status(500).json({ message: "Error fetching messages" });
-  }
-});
+  })
+);
 
-app.post("/messages", async (req, res) => {
-  const { message, senderId, receiverId } = req.body;
-  const newMessage = new Message({
-    senderId,
-    receiverId,
-    message,
-    sentAt: new Date().toISOString(),
-  });
+app.post(
+  "/messages",
+  verifyToken,
+  validateMessage,
+  catchAsync(async (req, res) => {
+    const { message, senderId, receiverId } = req.body;
+    const newMessage = new Message({
+      senderId,
+      receiverId,
+      message,
+      sentAt: new Date().toISOString(),
+    });
 
-  await newMessage.save();
-  res
-    .status(201)
-    .json({ message: "Save successfully", savedMessage: newMessage });
-});
+    await newMessage.save();
+    res
+      .status(201)
+      .json({ message: "Save successfully", savedMessage: newMessage });
+  })
+);
 
 function createToken(userId) {
   return jwt.sign({ id: userId }, process.env.JWT_SECRET_KEY);
 }
 
-app.get("/latest-messages", verifyToken, async (req, res) => {
-  const { id: userId } = req.user;
+app.get(
+  "/latest-messages",
+  verifyToken,
+  catchAsync(async (req, res) => {
+    const { id: userId } = req.user;
 
-  try {
     const userObjectId = new mongoose.Types.ObjectId(userId);
 
     // Step 1: Retrieve all messages where the user is involved either as sender or receiver
@@ -215,41 +198,44 @@ app.get("/latest-messages", verifyToken, async (req, res) => {
 
     // Step 3: Send the latest messages response
     res.json(latestMessages);
-  } catch (error) {
-    console.error("Error fetching latest messages:", error);
-    res.status(500).json({ message: "Error fetching latest messages" });
-  }
-});
+  })
+);
 
-app.get("/mark-read/:senderId/:receiverId", async (req, res) => {
-  const { senderId, receiverId } = req.params;
+app.put(
+  "/messages/:otherUserId",
+  verifyToken,
+  catchAsync(async (req, res) => {
+    const { otherUserId } = req.params;
+    const { id: currentUserId } = req.user;
 
-  const senderIdObject = new mongoose.Types.ObjectId(senderId);
-  const receiverIdObject = new mongoose.Types.ObjectId(receiverId);
+    const otherUserIdObject = new mongoose.Types.ObjectId(otherUserId);
+    const currentUserIdObject = new mongoose.Types.ObjectId(currentUserId);
 
-  try {
     const result = await Message.updateMany(
-      { senderId: senderIdObject, receiverId: receiverIdObject, isRead: false },
+      {
+        senderId: otherUserIdObject,
+        receiverId: currentUserIdObject,
+        isRead: false,
+      },
       { $set: { isRead: true } }
     );
 
-    // Check if any messages were updated
     if (result.nModified > 0) {
       res.status(200).json({ message: "Messages marked as read successfully" });
     }
-  } catch (err) {
-    console.error("Error marking messages as read:", err);
-    res.status(500).json({ message: "Failed to mark messages as read" });
-  }
-});
+  })
+);
 
-app.get("/delete-chats/:user1ID/:user2ID", async (req, res) => {
-  const { user1ID, user2ID } = req.params;
+app.delete(
+  "/messages/:otherUserId",
+  verifyToken,
+  catchAsync(async (req, res) => {
+    const { otherUserId } = req.params;
+    const { id: currentUserId } = req.user;
 
-  const id1 = new mongoose.Types.ObjectId(user1ID);
-  const id2 = new mongoose.Types.ObjectId(user2ID);
+    const id1 = new mongoose.Types.ObjectId(currentUserId);
+    const id2 = new mongoose.Types.ObjectId(otherUserId);
 
-  try {
     const deletedMessages = await Message.deleteMany({
       $or: [
         { senderId: id1, receiverId: id2 },
@@ -258,10 +244,8 @@ app.get("/delete-chats/:user1ID/:user2ID", async (req, res) => {
     });
 
     res.json(deletedMessages);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
+  })
+);
 
 // Real time chat setup
 io.on("connection", (socket) => {
@@ -319,6 +303,13 @@ io.on("connection", (socket) => {
   socket.on("disconnect", () => {
     console.log("A user disconnected:", socket.id);
   });
+});
+
+//ERROR HANDLER
+app.use((err, req, res, next) => {
+  const { message, status = 500 } = err;
+  if (!err.message) err.message = "Something went wrong";
+  res.status(status).json({ message });
 });
 
 const port = process.env.PORT || 3000;
