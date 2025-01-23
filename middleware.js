@@ -1,5 +1,6 @@
 const joi = require("joi");
 const ExpressError = require("./utilities/ExpressError");
+require("dotenv").config();
 
 module.exports.validateUser = (req, res, next) => {
   const userSchema = joi.object({
