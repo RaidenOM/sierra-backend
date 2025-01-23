@@ -213,7 +213,7 @@ app.get(
 );
 
 app.put(
-  "/messages/:otherUserId",
+  "/messages/mark-read/:otherUserId",
   verifyToken,
   catchAsync(async (req, res) => {
     const { otherUserId } = req.params;
