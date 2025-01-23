@@ -224,8 +224,8 @@ app.put(
 
     const result = await Message.updateMany(
       {
-        senderId: otherUserIdObject,
-        receiverId: currentUserIdObject,
+        senderId: otherUserId,
+        receiverId: currentUserId,
         isRead: false,
       },
       { $set: { isRead: true } }
