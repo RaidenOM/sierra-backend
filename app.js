@@ -231,9 +231,7 @@ app.put(
       { $set: { isRead: true } }
     );
 
-    if (result.nModified > 0) {
-      res.status(200).json({ message: "Messages marked as read successfully" });
-    }
+    res.status(200).json({ message: "Messages marked as read successfully" });
   })
 );
 
