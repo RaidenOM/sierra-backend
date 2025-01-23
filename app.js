@@ -38,45 +38,56 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(methodOverride("_method"));
 
-app.post("/register", async (req, res) => {
-  const { username, password } = req.body;
-  const hashedPassword = await bcrypt.hash(password, 10);
-  const user = new User({ username: username, password: hashedPassword });
-  const savedUser = await user.save();
-  const token = createToken(savedUser.id);
-  res.json({ token: token });
-});
+app.post(
+  "/register",
+  catchAsync(async (req, res) => {
+    const { username, password } = req.body;
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const user = new User({ username: username, password: hashedPassword });
+    const savedUser = await user.save();
+    const token = createToken(savedUser.id);
+    res.json({ token: token });
+  })
+);
 
-app.post("/login", async (req, res) => {
-  const { username, password } = req.body;
+app.post(
+  "/login",
+  catchAsync(async (req, res) => {
+    const { username, password } = req.body;
 
-  // check if user with given username exists
-  const user = await User.findOne({ username: username });
-  if (!user) {
-    return res.status(401).json({ message: "Invalid username or password." });
-  }
+    // check if user with given username exists
+    const user = await User.findOne({ username: username });
+    if (!user) {
+      return res.status(401).json({ message: "Invalid username or password." });
+    }
 
-  // if user exists verify the password
-  const verifyPassword = await bcrypt.compare(password, user.password);
-  if (!verifyPassword) {
-    return res.status(401).json({ message: "Invalid username or password." });
-  }
+    // if user exists verify the password
+    const verifyPassword = await bcrypt.compare(password, user.password);
+    if (!verifyPassword) {
+      return res.status(401).json({ message: "Invalid username or password." });
+    }
 
-  const token = createToken(user.id);
-  res.json({ token: token });
-});
+    const token = createToken(user.id);
+    res.json({ token: token });
+  })
+);
 
-app.get("/profile", verifyToken, async (req, res) => {
-  const { id } = req.user;
-  const user = await User.findById(id);
-  res.json(user);
-});
+app.get(
+  "/profile",
+  verifyToken,
+  catchAsync(async (req, res) => {
+    const { id } = req.user;
+    const user = await User.findById(id);
+    res.json(user);
+  })
+);
 
 // Get user profile by id
-app.get("/users/:id", async (req, res) => {
-  const { id } = req.params;
+app.get(
+  "/users/:id",
+  catchAsync(async (req, res) => {
+    const { id } = req.params;
 
-  try {
     const user = await User.findById(id);
 
     if (!user) {
@@ -84,28 +95,28 @@ app.get("/users/:id", async (req, res) => {
     }
 
     res.json(user);
-  } catch (error) {
-    console.error("Error fetching user profile:", error);
-    res.status(500).json({ message: "Error fetching user profile" });
-  }
-});
+  })
+);
 
 // Search for a user
-app.get("/search/:username", async (req, res) => {
-  const { username } = req.params;
-  try {
-    const user = await User.findOne({ username: username });
+app.get(
+  "/search/:username",
+  catchAsync(async (req, res) => {
+    const { username } = req.params;
+    try {
+      const user = await User.findOne({ username: username });
 
-    if (!user) {
-      return res.status(404).json({ message: "User not found" });
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      res.json(user);
+    } catch (error) {
+      console.error("Error fetching user profile:", error);
+      res.status(500).json({ message: "Error fetching user profile" });
     }
-
-    res.json(user);
-  } catch (error) {
-    console.error("Error fetching user profile:", error);
-    res.status(500).json({ message: "Error fetching user profile" });
-  }
-});
+  })
+);
 
 // Route to fetch messages between two users
 app.get(
