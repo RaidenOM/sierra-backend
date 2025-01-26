@@ -21,6 +21,10 @@ const UserSchema = new mongoose.Schema({
     default: "Hey there, I am using Sierra",
     trim: true,
   },
+  phone: {
+    type: String,
+    unique: true,
+  },
 });
 
 module.exports = mongoose.model("User", UserSchema);

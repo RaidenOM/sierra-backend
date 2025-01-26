@@ -41,9 +41,13 @@ app.use(methodOverride("_method"));
 app.post(
   "/register",
   catchAsync(async (req, res) => {
-    const { username, password } = req.body;
+    const { username, phone, password } = req.body;
     const hashedPassword = await bcrypt.hash(password, 10);
-    const user = new User({ username: username, password: hashedPassword });
+    const user = new User({
+      username: username,
+      phone: phone,
+      password: hashedPassword,
+    });
     const savedUser = await user.save();
     const token = createToken(savedUser.id);
     res.json({ token: token });
@@ -103,18 +107,28 @@ app.get(
   "/search/:username",
   catchAsync(async (req, res) => {
     const { username } = req.params;
-    try {
-      const user = await User.findOne({ username: username });
+    const user = await User.findOne({ username: username });
 
-      if (!user) {
-        return res.status(404).json({ message: "User not found" });
-      }
-
-      res.json(user);
-    } catch (error) {
-      console.error("Error fetching user profile:", error);
-      res.status(500).json({ message: "Error fetching user profile" });
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
     }
+
+    res.json(user);
+  })
+);
+
+app.get(
+  "/match-phone",
+  catchAsync(async (req, res) => {
+    const { phoneNumbers } = req.body;
+
+    const normalizedNumbers = phoneNumbers.map((number) =>
+      number.replace(/\D/g, "")
+    );
+
+    const users = await User.find({ phone: { $in: normalizedNumbers } });
+
+    res.json(users);
   })
 );
 
