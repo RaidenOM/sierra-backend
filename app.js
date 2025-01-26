@@ -122,11 +122,7 @@ app.post(
   catchAsync(async (req, res) => {
     const { phoneNumbers } = req.body;
 
-    const normalizedNumbers = phoneNumbers.map((number) =>
-      number.replace(/\D/g, "")
-    );
-
-    const users = await User.find({ phone: { $in: normalizedNumbers } });
+    const users = await User.find({ phone: { $in: phoneNumbers } });
 
     res.json(users);
   })
