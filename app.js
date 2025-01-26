@@ -117,7 +117,7 @@ app.get(
   })
 );
 
-app.get(
+app.post(
   "/match-phone",
   catchAsync(async (req, res) => {
     const { phoneNumbers } = req.body;
