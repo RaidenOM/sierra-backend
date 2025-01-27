@@ -278,6 +278,12 @@ io.on("connection", (socket) => {
     console.log(`User ${userId} joined a room ${userId}`);
   });
 
+  // Handler to handle room leaving
+  socket.on('leave-room', (userId) => {
+    socket.leave(userId)
+    console.log(`User ${userId} left room ${userId}`);
+  })
+
   // Listen for messages
   socket.on("send-message", async (data) => {
     try {
