@@ -153,17 +153,39 @@ app.post(
   validateMessage,
   catchAsync(async (req, res) => {
     const { message, senderId, receiverId } = req.body;
-    const newMessage = new Message({
-      senderId,
-      receiverId,
-      message,
+
+    // Save the message to the database
+    const savedMessage = await new Message({
+      senderId: senderId,
+      receiverId: receiverId,
+      message: message,
       sentAt: new Date().toISOString(),
+    }).save();
+
+    // Populate senderId and receiverId
+    const populatedMessage = await Message.findById(savedMessage._id)
+      .populate("senderId")
+      .populate("receiverId")
+      .exec();
+
+    // Notify the receiver with the new message s
+    io.to(receiverId).emit("new-message", savedMessage);
+
+    // Notify the sender (optional confirmation)
+    io.to(senderId).emit("message-sent", savedMessage);
+
+    const unreadCount = await Message.countDocuments({
+      senderId: senderId,
+      receiverId: receiverId,
+      isRead: false,
     });
 
-    await newMessage.save();
-    res
-      .status(201)
-      .json({ message: "Save successfully", savedMessage: newMessage });
+    io.to(receiverId).emit("chat-notify", {
+      ...populatedMessage.toObject(),
+      unreadCount: unreadCount,
+    });
+
+    res.json({ message: "Save successfully", savedMessage: savedMessage });
   })
 );
 
@@ -279,51 +301,9 @@ io.on("connection", (socket) => {
   });
 
   // Handler to handle room leaving
-  socket.on('leave-room', (userId) => {
-    socket.leave(userId)
+  socket.on("leave-room", (userId) => {
+    socket.leave(userId);
     console.log(`User ${userId} left room ${userId}`);
-  })
-
-  // Listen for messages
-  socket.on("send-message", async (data) => {
-    try {
-      const { senderId, receiverId, message } = data;
-
-      // Save the message to the database
-      const savedMessage = await new Message({
-        senderId: senderId,
-        receiverId: receiverId,
-        message: message,
-        sentAt: new Date().toISOString(),
-      }).save();
-
-      // Populate senderId and receiverId
-      const populatedMessage = await Message.findById(savedMessage._id)
-        .populate("senderId")
-        .populate("receiverId")
-        .exec();
-
-      // Notify the receiver with the new message s
-      io.to(receiverId).emit("new-message", savedMessage);
-
-      // Notify the sender (optional confirmation)
-      io.to(senderId).emit("message-sent", savedMessage);
-
-      const unreadCount = await Message.countDocuments({
-        senderId: senderId,
-        receiverId: receiverId,
-        isRead: false,
-      });
-
-      io.to(receiverId).emit("chat-notify", {
-        ...populatedMessage.toObject(),
-        unreadCount: unreadCount,
-      });
-
-      console.log("Message sent and notifications emitted.");
-    } catch (error) {
-      console.error("Error handling send-message event:", error);
-    }
   });
 
   // Handle user disconnecting

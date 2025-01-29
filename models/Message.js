@@ -13,7 +13,11 @@ const MessageSchema = new mongoose.Schema({
   },
   message: {
     type: String,
-    required: true,
+    default: "",
+  },
+  mediaURL: {
+    type: String,
+    default: null,
   },
   sentAt: {
     type: Date,
