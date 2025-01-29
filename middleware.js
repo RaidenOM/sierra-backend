@@ -39,7 +39,8 @@ module.exports.verifyToken = (req, res, next) => {
 
 module.exports.validateMessage = (req, res, next) => {
   const messageSchema = joi.object({
-    message: joi.string().required(),
+    message: joi.string().optional(),
+    mediaURL: joi.string().optional(),
     senderId: joi.string().required(),
     receiverId: joi.string().required(),
   });
