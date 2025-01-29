@@ -150,7 +150,6 @@ app.get(
 app.post(
   "/messages",
   verifyToken,
-  validateMessage,
   catchAsync(async (req, res) => {
     const { message, senderId, receiverId } = req.body;
 
