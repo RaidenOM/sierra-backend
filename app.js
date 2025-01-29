@@ -11,6 +11,9 @@ const { Server } = require("socket.io");
 const { verifyToken, validateMessage } = require("./middleware");
 const methodOverride = require("method-override");
 const catchAsync = require("./utilities/catchAsync");
+const multer = require("multer");
+const { storage } = require("./cloudinary/index");
+const upload = multer({ storage });
 
 const app = express();
 const server = http.createServer(app);
@@ -151,14 +154,17 @@ app.post(
   "/messages",
   verifyToken,
   validateMessage,
+  upload.single("mediaURL"),
   catchAsync(async (req, res) => {
     const { message, senderId, receiverId } = req.body;
+    const mediaUrl = req.file ? req.file.path : null;
 
     // Save the message to the database
     const savedMessage = await new Message({
       senderId: senderId,
       receiverId: receiverId,
       message: message,
+      mediaUrl: mediaUrl,
       sentAt: new Date().toISOString(),
     }).save();
 
