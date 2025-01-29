@@ -169,10 +169,10 @@ app.post(
       .exec();
 
     // Notify the receiver with the new message s
-    io.to(receiverId).emit("new-message", savedMessage);
+    io.emit("new-message", savedMessage);
 
     // Notify the sender (optional confirmation)
-    io.to(senderId).emit("message-sent", savedMessage);
+    io.emit("message-sent", savedMessage);
 
     const unreadCount = await Message.countDocuments({
       senderId: senderId,
