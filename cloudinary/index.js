@@ -10,7 +10,7 @@ cloudinary.config({
 const storage = new CloudinaryStorage({
   cloudinary: cloudinary,
   params: {
-    folder: "sKite",
+    folder: "Sierra",
     allowedFormats: ["jpeg", "png", "jpg", "mp4", "mp3", "mov"],
   },
 });
