@@ -9,9 +9,14 @@ cloudinary.config({
 
 const storage = new CloudinaryStorage({
   cloudinary: cloudinary,
-  params: {
-    folder: "Sierra",
-    allowed_formats: ["jpeg", "png", "jpg", "mp4", "mp3", "mov"],
+  params: (req, file) => {
+    // Determine if the file is a video or image
+    const isVideo = file.mimetype.startsWith("video/");
+    return {
+      folder: "Sierra",
+      allowed_formats: ["jpeg", "png", "jpg", "mp4", "mov"], // Use underscores for allowed_formats
+      resource_type: isVideo ? "video" : "image", // Set resource_type dynamically
+    };
   },
 });
 
