@@ -155,7 +155,7 @@ app.post(
   verifyToken,
   upload.single("mediaURL"),
   catchAsync(async (req, res) => {
-    const { message, senderId, receiverId } = req.body;
+    const { message, senderId, receiverId, mediaType } = req.body;
     const mediaURL = req.file ? req.file.path : null;
 
     // Save the message to the database
@@ -164,6 +164,7 @@ app.post(
       receiverId: receiverId,
       message: message,
       mediaURL: mediaURL,
+      mediaType: mediaType,
       sentAt: new Date().toISOString(),
     }).save();
 

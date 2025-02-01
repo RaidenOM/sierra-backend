@@ -19,6 +19,10 @@ const MessageSchema = new mongoose.Schema({
     type: String,
     default: null,
   },
+  mediaType: {
+    type: String,
+    default: null,
+  },
   sentAt: {
     type: Date,
     default: Date.now(),
