@@ -154,7 +154,6 @@ app.post(
   "/messages",
   verifyToken,
   upload.single("mediaURL"),
-  validateMessage,
   catchAsync(async (req, res) => {
     const { message, senderId, receiverId } = req.body;
     const mediaURL = req.file ? req.file.path : null;
