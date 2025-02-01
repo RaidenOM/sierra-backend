@@ -13,6 +13,7 @@ const storage = new CloudinaryStorage({
     folder: "Sierra",
     allowedFormats: ["jpeg", "png", "jpg", "mp4", "mp3", "mov"],
   },
+  resource_type: "auto",
 });
 
 module.exports = {
