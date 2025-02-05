@@ -114,11 +114,13 @@ app.put(
     const { bio } = req.body;
     const profilePhoto = req.file ? req.file.path : null;
 
-    const updatedUser = await User.findByIdAndUpdate(
-      id,
-      { bio: bio, profilePhoto: profilePhoto },
-      { new: true }
-    );
+    const newData = {};
+    newData.bio = bio;
+    if (profilePhoto !== null) newData.profilePhoto = profilePhoto;
+
+    const updatedUser = await User.findByIdAndUpdate(id, newData, {
+      new: true,
+    });
     res.json(updatedUser);
   })
 );
