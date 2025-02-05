@@ -105,6 +105,24 @@ app.get(
   })
 );
 
+// update profile
+app.put(
+  "/users/:id",
+  upload.single("profilePhoto"),
+  catchAsync(async (req, res) => {
+    const { id } = req.params;
+    const { bio } = req.body;
+    const profilePhoto = req.file ? req.file.path : null;
+
+    const updatedUser = await User.findByIdAndUpdate(
+      id,
+      { bio: bio, profilePhoto: profilePhoto },
+      { new: true }
+    );
+    res.json(updatedUser);
+  })
+);
+
 // Search for a user
 app.get(
   "/search/:username",
