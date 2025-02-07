@@ -115,7 +115,7 @@ app.put(
     const unsetProfilePhoto = req.body.unsetProfilePhoto === "true";
     const profilePhoto = req.file ? req.file.path : null;
 
-    const updatedFields = { bio };
+    const updatedFields = { bio: bio || "Hey there, I am using Sierra!" };
 
     if (unsetProfilePhoto) {
       updatedFields.profilePhoto =
