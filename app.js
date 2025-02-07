@@ -123,6 +123,8 @@ app.put(
       updatedFields.profilePhoto = profilePhoto;
     }
 
+    const updatedUser = await User.findByIdAndUpdate(id, updatedFields);
+
     res.json(updatedUser);
   })
 );
