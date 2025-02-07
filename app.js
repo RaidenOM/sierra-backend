@@ -111,7 +111,8 @@ app.put(
   upload.single("profilePhoto"),
   catchAsync(async (req, res) => {
     const { id } = req.params;
-    const { bio, unsetProfilePhoto } = req.body;
+    const { bio } = req.body;
+    const unsetProfilePhoto = req.body.unsetProfilePhoto === "true";
     const profilePhoto = req.file ? req.file.path : null;
 
     const updatedFields = { bio };
