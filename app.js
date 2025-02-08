@@ -321,6 +321,16 @@ app.delete(
   })
 );
 
+app.delete(
+  "/profile",
+  verifyToken,
+  catchAsync(async (req, res) => {
+    const { id } = req.user;
+    const deletedUser = await User.findByIdAndDelete(id);
+    res.json(deletedUser);
+  })
+);
+
 // Real time chat setup
 io.on("connection", (socket) => {
   console.log("A user connected:", socket.id);
