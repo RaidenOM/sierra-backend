@@ -327,7 +327,10 @@ app.delete(
   catchAsync(async (req, res) => {
     const { id } = req.user;
     const deletedUser = await User.findByIdAndDelete(id);
-    res.json(deletedUser);
+    const deletedMessages = await Message.deleteMany({
+      $or: [{ senderId: id }, { receiverId: id }],
+    });
+    res.json({ deletedUser: deletedUser, deletedMessages: deletedMessages });
   })
 );
 
