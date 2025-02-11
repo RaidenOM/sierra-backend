@@ -346,11 +346,11 @@ io.on("connection", (socket) => {
 
   // Handler to handle typing events
   socket.on("typing", ({ senderId, receiverId }) => {
-    socket.to(receiverId).emit("typing");
+    socket.to(receiverId).emit("typing", { senderId: senderId });
   });
 
   socket.on("stop-typing", ({ senderId, receiverId }) => {
-    socket.to(receiverId).emit("stop-typing");
+    socket.to(receiverId).emit("stop-typing", { senderId: senderId });
   });
 
   // Handler to handle room leaving
