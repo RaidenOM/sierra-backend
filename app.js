@@ -344,6 +344,15 @@ io.on("connection", (socket) => {
     console.log(`User ${userId} joined a room ${userId}`);
   });
 
+  // Handler to handle typing events
+  socket.on("typing", ({ senderId, receiverId }) => {
+    socket.to(receiverId).emit("typing");
+  });
+
+  socket.on("stop-typing", ({ senderId, receiverId }) => {
+    socket.to(receiverId).emit("stop-typing");
+  });
+
   // Handler to handle room leaving
   socket.on("leave-room", (userId) => {
     socket.leave(userId);
