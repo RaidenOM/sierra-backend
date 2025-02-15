@@ -13,6 +13,7 @@ const methodOverride = require("method-override");
 const catchAsync = require("./utilities/catchAsync");
 const multer = require("multer");
 const { storage } = require("./cloudinary/index");
+const { default: axios } = require("axios");
 const upload = multer({ storage });
 
 const app = express();
@@ -363,6 +364,36 @@ io.on("connection", (socket) => {
   socket.on("disconnect", () => {
     console.log("A user disconnected:", socket.id);
   });
+});
+
+// OTP Logic
+const otpStorage = {};
+app.post(
+  "/send-otp",
+  catchAsync(async (req, res) => {
+    const { phone } = req.body;
+    const response = await axios.post("https://api.phone.email/v1/otp/send", {
+      phone: phone,
+      apiKey: process.env.PHONE_EMAIL_API_KEY,
+    });
+
+    if (response.data.success) {
+      otpStorage[phone] = response.data.otp; // Store OTP temporarily
+      res.json({ message: "OTP sent successfully!" });
+    } else {
+      res.status(500).json({ message: "Failed to send OTP" });
+    }
+  })
+);
+
+app.post("/verify-opt", (req, res) => {
+  const { phone, otp } = req.body;
+  if (otpStorage[phone] == otp) {
+    delete otpStorage[phone]; // Remove OTP after verification
+    res.json({ message: "OTP verified successfully!" });
+  } else {
+    res.status(400).json({ message: "Invalid OTP" });
+  }
 });
 
 //ERROR HANDLER
