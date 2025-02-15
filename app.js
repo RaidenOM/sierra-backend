@@ -386,7 +386,7 @@ app.post(
   })
 );
 
-app.post("/verify-opt", (req, res) => {
+app.post("/verify-otp", (req, res) => {
   const { phone, otp } = req.body;
   if (otpStorage[phone] == otp) {
     delete otpStorage[phone]; // Remove OTP after verification
