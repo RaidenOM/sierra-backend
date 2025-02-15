@@ -13,7 +13,6 @@ const methodOverride = require("method-override");
 const catchAsync = require("./utilities/catchAsync");
 const multer = require("multer");
 const { storage } = require("./cloudinary/index");
-const { default: axios } = require("axios");
 const upload = multer({ storage });
 
 const app = express();
