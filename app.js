@@ -168,7 +168,10 @@ app.get(
         { senderId: otherUserId, receiverId: currentUserId },
         { senderId: currentUserId, receiverId: otherUserId },
       ],
-    }).sort({ sentAt: 1 });
+    })
+      .sort({ sentAt: 1 })
+      .populate("senderId")
+      .populate("receiverId");
 
     res.json(messages);
   })
