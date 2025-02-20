@@ -201,22 +201,20 @@ app.post(
       .populate("receiverId")
       .exec();
 
-    // Notify the receiver with the new message s
-    io.to(receiverId).emit("new-message", populatedMessage);
-
-    // Notify the sender (optional confirmation)
-    io.to(senderId).emit("message-sent", populatedMessage);
-
     const unreadCount = await Message.countDocuments({
       senderId: senderId,
       receiverId: receiverId,
       isRead: false,
     });
 
-    io.to(receiverId).emit("chat-notify", {
+    // Notify the receiver with the new message
+    io.to(receiverId).emit("new-message", {
       ...populatedMessage.toObject(),
       unreadCount: unreadCount,
     });
+
+    // Notify the sender (optional confirmation)
+    io.to(senderId).emit("message-sent", populatedMessage);
 
     res.json({ message: "Save successfully", savedMessage: savedMessage });
   })
