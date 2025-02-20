@@ -202,7 +202,7 @@ app.post(
       .exec();
 
     // Notify the receiver with the new message s
-    io.to(receiverId).emit("new-message", savedMessage);
+    io.to(receiverId).emit("new-message", populatedMessage);
 
     // Notify the sender (optional confirmation)
     io.to(senderId).emit("message-sent", populatedMessage);
