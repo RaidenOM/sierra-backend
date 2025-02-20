@@ -319,8 +319,8 @@ app.delete(
       ],
     });
 
-    socket.to(senderId).emit("delete-chat", { receiverId: otherUserId });
-    socket.to(receiverId).emit("delete-chat", { receiverId: currentUserId });
+    io.to(currentUserId).emit("delete-chat", { receiverId: otherUserId });
+    io.to(otherUserId).emit("delete-chat", { receiverId: currentUserId });
 
     res.json(deletedMessages);
   })
