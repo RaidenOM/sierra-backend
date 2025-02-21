@@ -231,7 +231,7 @@ app.post(
           : populatedMessage.mediaType === "video"
           ? "🎥"
           : "🎧",
-        data: { receiverId: populatedMessage.receiverId._id },
+        data: { receiverId: populatedMessage.senderId._id },
         badge: unreadCount || 0,
       },
       {
