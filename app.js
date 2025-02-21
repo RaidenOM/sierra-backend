@@ -236,6 +236,7 @@ app.post(
           image: populatedMessage.senderId.profilePhoto,
         },
         badge: unreadCount || 0,
+        sound: "message-received.mp3",
       },
       {
         headers: {
