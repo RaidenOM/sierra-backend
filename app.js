@@ -232,6 +232,9 @@ app.post(
           ? "🎥"
           : "🎧",
         data: { receiverId: populatedMessage.senderId._id },
+        attatchments: {
+          image: populatedMessage.senderId.profilePhoto,
+        },
         badge: unreadCount || 0,
       },
       {
