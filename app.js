@@ -233,7 +233,9 @@ app.post(
           : "🎧",
         data: { receiverId: populatedMessage.senderId._id },
         attachments: {
-          image: populatedMessage.senderId.profilePhoto,
+          image:
+            populatedMessage.senderId.profilePhoto ||
+            "https://res.cloudinary.com/dnltrumxv/image/upload/v1740145328/Sierra/wfsedohpnvztldwuamlu.png",
         },
         badge: unreadCount || 0,
         sound: "message-received.mp3",
