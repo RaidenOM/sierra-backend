@@ -13,6 +13,7 @@ const methodOverride = require("method-override");
 const catchAsync = require("./utilities/catchAsync");
 const multer = require("multer");
 const { storage } = require("./cloudinary/index");
+const { default: axios } = require("axios");
 const upload = multer({ storage });
 
 const app = express();
@@ -216,6 +217,31 @@ app.post(
     // Notify the sender (optional confirmation)
     io.to(senderId).emit("message-sent", populatedMessage);
 
+    // send push notifications
+    await axios.post(
+      "https://exp.host/--/api/v2/push/send",
+      {
+        to: populatedMessage.receiverId.pushTokens,
+        title: populatedMessage.receiverId.username,
+        subtitle: "New message",
+        body: populatedMessage.message
+          ? populatedMessage.message
+          : populatedMessage.mediaType === "image"
+          ? "📷"
+          : populatedMessage.mediaType === "video"
+          ? "🎥"
+          : "🎧",
+        data: { receiverId: populatedMessage.receiverId._id },
+        badge: unreadCount || 0,
+      },
+      {
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+      }
+    );
+
     res.json({ message: "Save successfully", savedMessage: savedMessage });
   })
 );
@@ -334,6 +360,37 @@ app.delete(
       $or: [{ senderId: id }, { receiverId: id }],
     });
     res.json({ deletedUser: deletedUser, deletedMessages: deletedMessages });
+  })
+);
+
+app.put(
+  "/store-push-token",
+  verifyToken,
+  catchAsync(async (req, res) => {
+    const { id } = req.user;
+    const { pushToken } = req.body;
+
+    const user = await User.findById(id);
+    if (!user.pushTokens.includes(pushToken)) {
+      user.pushTokens.push(pushToken);
+      await user.save();
+    }
+    res.json({ success: true, message: "Push token saved!" });
+  })
+);
+
+app.put(
+  "/delete-push-token",
+  verifyToken,
+  catchAsync(async (req, res) => {
+    const { id } = req.user;
+    const { pushToken } = req.body;
+
+    const user = await User.findById(id);
+    user.pushTokens = user.pushTokens.filter((token) => token !== pushToken);
+    await user.save();
+
+    res.json({ success: true, message: "Push token deleted!" });
   })
 );
 

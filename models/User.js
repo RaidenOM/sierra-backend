@@ -25,6 +25,7 @@ const UserSchema = new mongoose.Schema({
     unique: true,
     required: true,
   },
+  pushTokens: [String],
 });
 
 module.exports = mongoose.model("User", UserSchema);

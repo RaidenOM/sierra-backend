@@ -16,6 +16,7 @@
     "cloudinary": "^1.41.3",
     "connect-mongo": "^5.1.0",
     "dotenv": "^16.4.7",
+    "expo-server-sdk": "^3.14.0",
     "express": "^4.21.2",
     "joi": "^17.13.3",
     "jsonwebtoken": "^9.0.2",
