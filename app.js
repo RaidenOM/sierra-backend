@@ -242,6 +242,7 @@ app.post(
         },
         badge: unreadCount || 0,
         sound: "message-received.mp3",
+        channelId: "default",
       },
       {
         headers: {
