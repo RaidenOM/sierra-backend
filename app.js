@@ -218,39 +218,40 @@ app.post(
     io.to(senderId).emit("message-sent", populatedMessage);
 
     // send push notifications
-    await axios.post(
-      "https://exp.host/--/api/v2/push/send",
-      {
-        to: populatedMessage.receiverId.pushTokens,
-        title: populatedMessage.receiverId.username,
-        subtitle: "New message",
-        body: populatedMessage.message
-          ? populatedMessage.message
-          : populatedMessage.mediaType === "image"
-          ? "📷"
-          : populatedMessage.mediaType === "video"
-          ? "🎥"
-          : "🎧",
-        data: {
-          receiverId: populatedMessage.senderId._id,
-          url: `sierra://chat?receiverId=${populatedMessage.senderId._id}`,
-        },
-        attachments: {
-          image:
-            populatedMessage.senderId.profilePhoto ||
-            "https://res.cloudinary.com/dnltrumxv/image/upload/v1740145328/Sierra/wfsedohpnvztldwuamlu.png",
-        },
-        badge: unreadCount || 0,
-        sound: "message-received.mp3",
-        channelId: "default",
-      },
-      {
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json",
-        },
-      }
-    );
+    if (populatedMessage.receiverId.pushTokens?.length > 0) {
+      const notificationPromises = populatedMessage.receiverId.pushTokens.map(
+        async (token) => {
+          return axios.post(
+            "https://exp.host/--/api/v2/push/send",
+            {
+              to: token,
+              title: populatedMessage.senderId.username,
+              body: populatedMessage.message
+                ? populatedMessage.message
+                : populatedMessage.mediaType === "image"
+                ? "📷 Photo"
+                : populatedMessage.mediaType === "video"
+                ? "🎥 Video"
+                : "🎧 Audio",
+              data: {
+                receiverId: populatedMessage.senderId._id,
+                url: `sierra://chat?receiverId=${populatedMessage.senderId._id}`,
+              },
+              sound: "default",
+              channelId: "default",
+            },
+            {
+              headers: {
+                "Content-Type": "application/json",
+                Accept: "application/json",
+              },
+            }
+          );
+        }
+      );
+
+      await Promise.all(notificationPromises);
+    }
 
     res.json({ message: "Save successfully", savedMessage: savedMessage });
   })
