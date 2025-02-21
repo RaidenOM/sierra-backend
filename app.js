@@ -231,7 +231,10 @@ app.post(
           : populatedMessage.mediaType === "video"
           ? "🎥"
           : "🎧",
-        data: { receiverId: populatedMessage.senderId._id },
+        data: {
+          receiverId: populatedMessage.senderId._id,
+          url: `sierra://chat?receiverId=${populatedMessage.senderId._id}`,
+        },
         attachments: {
           image:
             populatedMessage.senderId.profilePhoto ||
