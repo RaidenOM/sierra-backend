@@ -25,6 +25,8 @@ const io = new Server(server, {
     allowedHeaders: ["*"],
     credentials: false,
   },
+  pingTimeout: 60000,
+  pingInterval: 25000,
 });
 
 const dbUrl = process.env.DB_URL || "mongodb://localhost:27017/sierra";
