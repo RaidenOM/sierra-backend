@@ -384,11 +384,8 @@ app.put(
     const { id } = req.user;
     const { pushToken } = req.body;
 
-    const user = await User.findById(id);
-    if (!user.pushTokens.includes(pushToken)) {
-      user.pushTokens.push(pushToken);
-      await user.save();
-    }
+    // Use $addToSet to add only if pushToken is not already in the array
+    await User.findByIdAndUpdate(id, { $addToSet: { pushTokens: pushToken } });
     res.json({ success: true, message: "Push token saved!" });
   })
 );
