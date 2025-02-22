@@ -15,7 +15,7 @@ const multer = require("multer");
 const { storage } = require("./cloudinary/index");
 const { default: axios } = require("axios");
 const { default: Expo } = require("expo-server-sdk");
-const expo = Expo();
+const expo = new Expo();
 const upload = multer({ storage });
 
 const app = express();
