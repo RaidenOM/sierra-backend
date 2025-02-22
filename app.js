@@ -14,8 +14,6 @@ const catchAsync = require("./utilities/catchAsync");
 const multer = require("multer");
 const { storage } = require("./cloudinary/index");
 const { default: axios } = require("axios");
-const { default: Expo } = require("expo-server-sdk");
-const expo = new Expo();
 const upload = multer({ storage });
 
 const app = express();
@@ -223,7 +221,6 @@ app.post(
     if (populatedMessage.receiverId.pushTokens?.length > 0) {
       const notificationPromises = populatedMessage.receiverId.pushTokens.map(
         async (token) => {
-          if (Expo.isExpoPushToken(token)) return;
           return axios.post(
             "https://exp.host/--/api/v2/push/send",
             {
