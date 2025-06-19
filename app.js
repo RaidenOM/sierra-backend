@@ -404,6 +404,21 @@ app.put(
   })
 );
 
+app.post(
+  "/contacts",
+  verifyToken,
+  catchAsync(async (req, res) => {
+    const { id } = req.user;
+    const user = await User.findById(id);
+
+    const contacts = req.body;
+    user.contacts = contacts;
+    await user.save();
+
+    res.status(200).json({ message: "Contacts successfully uploaded" });
+  })
+);
+
 // Real time chat setup
 io.on("connection", (socket) => {
   console.log("A user connected:", socket.id);

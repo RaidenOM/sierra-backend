@@ -25,6 +25,12 @@ const UserSchema = new mongoose.Schema({
     unique: true,
     required: true,
   },
+  contacts: [
+    {
+      phone: String,
+      savedName: String,
+    },
+  ],
   pushTokens: [String],
 });
 
