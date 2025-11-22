@@ -14,6 +14,7 @@ const catchAsync = require("./utilities/catchAsync");
 const multer = require("multer");
 const { storage } = require("./cloudinary/index");
 const { default: axios } = require("axios");
+const ExpressError = require("./utilities/ExpressError");
 const upload = multer({ storage });
 
 const app = express();
@@ -48,6 +49,10 @@ app.post(
   "/register",
   catchAsync(async (req, res) => {
     const { username, phone, password } = req.body;
+
+    const existingUser = await User.findOne({ username: username });
+    if (existingUser) throw new ExpressError("User already exists", 409);
+
     const hashedPassword = await bcrypt.hash(password, 10);
     const user = new User({
       username: username,
@@ -454,9 +459,8 @@ io.on("connection", (socket) => {
 // ------------------------------------------------------------------------------------------------------------------------
 //ERROR HANDLER
 app.use((err, req, res, next) => {
-  const { message, status = 500 } = err;
-  if (!err.message) err.message = "Something went wrong";
-  res.status(status).json({ message });
+  const { message = "Something went wrong", status = 500 } = err;
+  res.status(status).json({ message: message });
 });
 
 const port = process.env.PORT || 3000;
