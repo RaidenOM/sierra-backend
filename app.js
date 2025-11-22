@@ -78,7 +78,7 @@ app.post(
     }
 
     const token = createToken(user.id);
-    res.json({ token: token });
+    res.json({ token: token, user: user });
   })
 );
 
@@ -419,7 +419,8 @@ app.post(
   })
 );
 
-// Real time chat setup
+// ------------------------------------------------------------------------------------------------------------------------
+// REAL TIME CHAT SETUP
 io.on("connection", (socket) => {
   console.log("A user connected:", socket.id);
 
@@ -429,11 +430,10 @@ io.on("connection", (socket) => {
     console.log(`User ${userId} joined a room ${userId}`);
   });
 
-  // Handler to handle typing events
+  // Handlers to handle typing events
   socket.on("typing", ({ senderId, receiverId }) => {
     socket.to(receiverId).emit("typing", { senderId: senderId });
   });
-
   socket.on("stop-typing", ({ senderId, receiverId }) => {
     socket.to(receiverId).emit("stop-typing", { senderId: senderId });
   });
@@ -449,7 +449,9 @@ io.on("connection", (socket) => {
     console.log("A user disconnected:", socket.id);
   });
 });
+// ------------------------------------------------------------------------------------------------------------------------
 
+// ------------------------------------------------------------------------------------------------------------------------
 //ERROR HANDLER
 app.use((err, req, res, next) => {
   const { message, status = 500 } = err;
@@ -461,3 +463,4 @@ const port = process.env.PORT || 3000;
 server.listen(port, () => {
   console.log(`Server is running on port ${port}`);
 });
+// ------------------------------------------------------------------------------------------------------------------------
