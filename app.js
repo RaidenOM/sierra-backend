@@ -306,8 +306,8 @@ app.get(
           ...message.toObject(),
           otherUser:
             message.senderId._id === userObjectId
-              ? message.receiverId._id
-              : message.senderId._id,
+              ? message.receiverId
+              : message.senderId,
           unreadCount: unreadCount,
         });
         contacts.add(contactId); // Add contactId to the set
