@@ -31,7 +31,7 @@ export const verifyToken = (req, res, next) => {
 
   jwt.verify(token, process.env.JWT_SECRET_KEY, (err, payload) => {
     if (err) {
-      return res.status(403).json({ message: "Invalid token" });
+      throw new ExpressError("Invalid Token", 403);
     }
 
     req.user = payload;
