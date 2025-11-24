@@ -273,7 +273,7 @@ app.get(
     const userObjectId = new mongoose.Types.ObjectId(userId);
 
     // Step 1: Retrieve all messages where the user is involved either as sender or receiver
-    const messages = await Message.find({
+    const messages = Message.find({
       $or: [{ senderId: userObjectId }, { receiverId: userObjectId }],
     })
       .sort({ sentAt: -1 })
@@ -304,10 +304,6 @@ app.get(
         });
         latestMessages.push({
           ...message.toObject(),
-          otherUser:
-            message.senderId._id.toString() === userObjectId.toString()
-              ? message.receiverId
-              : message.senderId,
           unreadCount: unreadCount,
         });
         contacts.add(contactId); // Add contactId to the set
