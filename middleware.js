@@ -1,9 +1,11 @@
-const joi = require("joi");
-const ExpressError = require("./utilities/ExpressError");
-require("dotenv").config();
-const jwt = require("jsonwebtoken");
+import joi from "joi";
+import ExpressError from "./utilities/ExpressError.js";
+import dotenv from "dotenv";
+import jwt from "jsonwebtoken";
 
-module.exports.validateUser = (req, res, next) => {
+dotenv.config();
+
+export const validateUser = (req, res, next) => {
   const userSchema = joi.object({
     username: joi.string().required(),
     password: joi.string().required(),
@@ -19,7 +21,7 @@ module.exports.validateUser = (req, res, next) => {
   }
 };
 
-module.exports.verifyToken = (req, res, next) => {
+export const verifyToken = (req, res, next) => {
   const authHeader = req.headers.authorization;
   const token = authHeader && authHeader.split(" ")[1];
 
@@ -37,7 +39,7 @@ module.exports.verifyToken = (req, res, next) => {
   });
 };
 
-module.exports.validateMessage = (req, res, next) => {
+export const validateMessage = (req, res, next) => {
   const messageSchema = joi.object({
     message: joi.string().optional(),
     mediaURL: joi.string().optional(),

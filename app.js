@@ -1,22 +1,22 @@
-require("dotenv").config();
+import dotenv from "dotenv";
+dotenv.config();
+import express from "express";
+import mongoose from "mongoose";
+import jwt from "jsonwebtoken";
+import bcrypt from "bcrypt";
+import User from "./models/User.js";
+import Message from "./models/Message.js";
+import http from "http";
+import { Server } from "socket.io";
+import { verifyToken, validateMessage } from "./middleware.js";
+import methodOverride from "method-override";
+import catchAsync from "./utilities/catchAsync.js";
+import multer from "multer";
+import { storage } from "./cloudinary/index.js";
+import axios from "axios";
+import ExpressError from "./utilities/ExpressError.js";
 
-const express = require("express");
-const mongoose = require("mongoose");
-const jwt = require("jsonwebtoken");
-const bcrypt = require("bcrypt");
-const User = require("./models/User");
-const Message = require("./models/Message");
-const http = require("http");
-const { Server } = require("socket.io");
-const { verifyToken, validateMessage } = require("./middleware");
-const methodOverride = require("method-override");
-const catchAsync = require("./utilities/catchAsync");
-const multer = require("multer");
-const { storage } = require("./cloudinary/index");
-const { default: axios } = require("axios");
-const ExpressError = require("./utilities/ExpressError");
 const upload = multer({ storage });
-
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server, {
@@ -31,7 +31,6 @@ const io = new Server(server, {
 });
 
 const dbUrl = process.env.DB_URL || "mongodb://localhost:27017/sierra";
-
 mongoose
   .connect(dbUrl)
   .then(() => {
@@ -97,7 +96,6 @@ app.get(
   })
 );
 
-// Get user profile by id
 app.get(
   "/users/:id",
   catchAsync(async (req, res) => {
@@ -113,7 +111,6 @@ app.get(
   })
 );
 
-// update profile
 app.put(
   "/users/:id",
   upload.single("profilePhoto"),
@@ -137,7 +134,6 @@ app.put(
   })
 );
 
-// Search for a user
 app.get(
   "/search/:username",
   catchAsync(async (req, res) => {
