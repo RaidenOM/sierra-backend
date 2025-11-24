@@ -69,8 +69,10 @@ app.post(
   catchAsync(async (req, res) => {
     const { username, password } = req.body;
 
-    // check if user with given username exists
-    const user = await User.findOne({ username: username });
+    // check if user with given username exists, converts to plain JS object and not document (lean)
+    const user = await User.findOne({ username: username })
+      .select("+password")
+      .lean();
     if (!user) {
       return res.status(401).json({ message: "Invalid username or password." });
     }
@@ -81,7 +83,8 @@ app.post(
       return res.status(401).json({ message: "Invalid username or password." });
     }
 
-    const token = createToken(user.id);
+    const token = createToken(user._id);
+    delete user.password;
     res.json({ token: token, user: user });
   })
 );
@@ -270,11 +273,9 @@ app.get(
   catchAsync(async (req, res) => {
     const { id: userId } = req.user;
 
-    const userObjectId = new mongoose.Types.ObjectId(userId);
-
     // Step 1: Retrieve all messages where the user is involved either as sender or receiver
     const messages = await Message.find({
-      $or: [{ senderId: userObjectId }, { receiverId: userObjectId }],
+      $or: [{ senderId: userId }, { receiverId: userId }],
     })
       .sort({ sentAt: -1 })
       .populate("senderId")
@@ -291,17 +292,18 @@ app.get(
 
     for (const message of messages) {
       const contactId =
-        message.senderId._id.toString() === userObjectId.toString()
-          ? message.receiverId._id.toString()
-          : message.senderId._id.toString();
+        message.senderId._id === userId
+          ? message.receiverId._id
+          : message.senderId._id;
 
       // If the contactId is not already in the latestMessages array, add the latest message
       if (!contacts.has(contactId)) {
         const unreadCount = await Message.countDocuments({
           senderId: contactId,
-          receiverId: userObjectId,
+          receiverId: userId,
           isRead: false,
         });
+        console.log(message);
         latestMessages.push({
           ...message.toObject(),
           unreadCount: unreadCount,
@@ -321,9 +323,6 @@ app.put(
   catchAsync(async (req, res) => {
     const { otherUserId } = req.params;
     const { id: currentUserId } = req.user;
-
-    const otherUserIdObject = new mongoose.Types.ObjectId(otherUserId);
-    const currentUserIdObject = new mongoose.Types.ObjectId(currentUserId);
 
     const result = await Message.updateMany(
       {
