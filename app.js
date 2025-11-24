@@ -305,7 +305,7 @@ app.get(
         latestMessages.push({
           ...message.toObject(),
           otherUser:
-            message.senderId._id === userObjectId
+            message.senderId._id.toString() === userObjectId.toString()
               ? message.receiverId
               : message.senderId,
           unreadCount: unreadCount,
