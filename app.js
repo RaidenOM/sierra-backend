@@ -273,7 +273,7 @@ app.get(
     const userObjectId = new mongoose.Types.ObjectId(userId);
 
     // Step 1: Retrieve all messages where the user is involved either as sender or receiver
-    const messages = Message.find({
+    const messages = await Message.find({
       $or: [{ senderId: userObjectId }, { receiverId: userObjectId }],
     })
       .sort({ sentAt: -1 })
