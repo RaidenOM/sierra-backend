@@ -292,9 +292,9 @@ app.get(
 
     for (const message of messages) {
       const contactId =
-        message.senderId._id === userId
-          ? message.receiverId._id
-          : message.senderId._id;
+        message.senderId.id === userId
+          ? message.receiverId.id
+          : message.senderId.id;
 
       // If the contactId is not already in the latestMessages array, add the latest message
       if (!contacts.has(contactId)) {
