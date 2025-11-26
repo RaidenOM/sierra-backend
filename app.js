@@ -44,6 +44,10 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(methodOverride("_method"));
 
+app.get("/", (req, res) => {
+  res.json({ message: "This is the backend server for Sierra" });
+});
+
 app.post(
   "/register",
   catchAsync(async (req, res) => {
